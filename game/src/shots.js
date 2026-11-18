@@ -42,6 +42,9 @@ export function stageShot(name, game, seed = 1) {
       const car = cars[i];
       if (!car) return;
       car.x = s[0]; car.z = s[1]; car.heading = s[2] ?? 0; car.speed = s[3] ?? 0;
+      // Shot mode never runs the game loop, so sync the mesh here too —
+      // otherwise the car keeps rendering at its random spawn position.
+      if (car.mesh) { car.mesh.position.set(s[0], 0, s[1]); car.mesh.rotation.y = s[2] ?? 0; }
     });
   };
   const placePolice = (spots) => {
@@ -53,6 +56,9 @@ export function stageShot(name, game, seed = 1) {
       const car = cops[i];
       if (!car) return;
       car.x = s[0]; car.z = s[1]; car.heading = s[2] ?? 0; car.speed = s[3] ?? 0;
+      // Shot mode never runs the game loop, so sync the mesh here too —
+      // otherwise the car keeps rendering at its random spawn position.
+      if (car.mesh) { car.mesh.position.set(s[0], 0, s[1]); car.mesh.rotation.y = s[2] ?? 0; }
     });
   };
   const setWanted = (n) => {
