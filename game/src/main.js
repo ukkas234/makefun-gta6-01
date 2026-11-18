@@ -63,6 +63,12 @@ function boot() {
   const city = createCity(world.scene, rng);
   const player = createPlayer(world.scene, city);
   const traffic = createTraffic(world.scene, city, 14);
+  // Parked cars on the spawn road (x=0, road is 12 m wide) near SPAWN (0, 26),
+  // kerb-side so the centre lane stays clear for moving traffic and the player
+  // on foot. Closest is ~3.9 m from spawn, inside the 4.5 m steal radius.
+  traffic.parkCar('sedan', 3, 28.5, Math.PI, 0x3b82c4);
+  traffic.parkCar('taxi', -3.5, 19, 0);
+  traffic.parkCar('muscle', 3.5, 38, Math.PI, 0xc22a2a);
   const police = createPolice(world.scene, city);
   const hud = createHUD();
   const audio = createAudio();
@@ -134,6 +140,10 @@ function boot() {
   const playerCars = [];
   function enterCar(type, x, z, heading, speed) {
     const car = createCar(type, x, z, heading);
+    // createCar() does NOT add the mesh to the scene — the caller owns scene
+    // membership. Without this the staged player car is invisible (traffic
+    // and police cars add their own meshes; see traffic.js / police.js).
+    world.scene.add(car.mesh);
     car.speed = speed || 0;
     car.isPlayer = true;
     player.car = car;
@@ -653,6 +663,10 @@ function boot() {
     resetWorld();
     showScreen('play');
     stageShot(shotName, game, seed);
+    // Chase view for staged driving shots: resetWorld() leaves camYaw at PI
+    // (camera south of the car, side view), while staged cars head east
+    // (drive/chase) or south (night). Put the camera behind the car.
+    if (player.car) S.camYaw = player.heading;
     // Sync HUD once so the frame shows the staged state.
     hud.update({
       health: player.health,

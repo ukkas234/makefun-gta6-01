@@ -146,6 +146,17 @@ export function createTraffic(scene, city, count = 14) {
     return car;
   }
 
+  // Parked cars: a stationary car the player can steal. It joins traffic.cars
+  // (so nearestCar / the minimap / police obstacle checks see it) but gets no
+  // _ai, so update() never drives it.
+  function parkCar(type, x, z, heading, color) {
+    const car = createCar(type, x, z, heading, color);
+    car.isPlayer = false;
+    scene.add(car.mesh);
+    cars.push(car);
+    return car;
+  }
+
   for (let i = 0; i < count; i += 1) spawnCar();
 
   // Is `other` close ahead of `car` (same lane-ish), so `car` should stop?
@@ -247,5 +258,5 @@ export function createTraffic(scene, city, count = 14) {
     if (car._ai) delete car._ai;
   }
 
-  return { cars, update, nearestCar, releaseCar, spawnCar };
+  return { cars, update, nearestCar, releaseCar, spawnCar, parkCar };
 }
