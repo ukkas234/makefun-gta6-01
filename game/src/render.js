@@ -141,6 +141,7 @@ export function createWorld3D(canvas) {
 
   function update() {
     resize();
+    render();
   }
 
   window.addEventListener('resize', resize);
