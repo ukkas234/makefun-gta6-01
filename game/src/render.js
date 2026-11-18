@@ -4,12 +4,13 @@
 //
 // createWorld3D(canvas) → {
 //   scene, camera, renderer, sun, hemi, nightFactor, timeOfDay,
-//   setTimeOfDay(tHours), isNight(), update(dt), render(), createBlobShadow(size),
+//   setTimeOfDay(t), isNight(), update(dt), render(), createBlobShadow(size),
 //   resize()
 // }
 //
-// setTimeOfDay takes game-clock hours (0..24); 6:00 sunrise, 18:00 sunset.
-// Day = bright blue sky, night = dark blue sky with dim moonlight.
+// setTimeOfDay takes game-clock hours (0..24) or a fraction of the day (0..1);
+// 6:00 sunrise, 18:00 sunset. It also drives the city's night materials
+// (lit windows, neon, lamps) via scene.userData.solmaraCity when present.
 import * as THREE from '../vendor/three.module.js';
 import { COLORS } from './config.js';
 
@@ -62,9 +63,15 @@ export function createWorld3D(canvas) {
     camera.updateProjectionMatrix();
   }
 
-  /** tHours: game-clock hours, 0..24 (wraps). 6 sunrise, 12 noon, 18 sunset. */
-  function setTimeOfDay(tHours) {
-    timeOfDay = ((tHours % 24) + 24) % 24;
+  /** t: game-clock time — either hours (0..24) or a fraction of the day (0..1).
+   *  main.js passes a fraction (clockHours / 24); shots pass hours. Both work:
+   *  values in [0, 1] are read as fractions, values above 1 as hours.
+   *  6:00 sunrise, 12:00 noon, 18:00 sunset. Also drives the city's night
+   *  materials (lit windows, neon, lamps) via scene.userData.solmaraCity,
+   *  so callers only ever need this one call. */
+  function setTimeOfDay(t) {
+    const hours = t >= 0 && t <= 1 ? t * 24 : t;
+    timeOfDay = ((hours % 24) + 24) % 24;
     // Daylight: 0 at night, 1 at noon, smooth ramps at dawn/dusk.
     const dayProgress = (timeOfDay - 6) / 12; // 0 at 06:00, 1 at 18:00
     const daylight = dayProgress <= 0 || dayProgress >= 1 ? 0 : Math.sin(dayProgress * Math.PI);
@@ -99,6 +106,9 @@ export function createWorld3D(canvas) {
     hemi.intensity = 0.35 + daylight * 0.85;
     hemi.color.setHex(0xbfd9ff).lerp(new THREE.Color(0x2a3a5f), nightFactor);
     hemi.groundColor.setHex(0x4a5240).lerp(new THREE.Color(0x1a1c22), nightFactor);
+    // Drive the city's night materials (registered by city.js on the scene).
+    const cityApi = scene.userData ? scene.userData.solmaraCity : null;
+    if (cityApi && typeof cityApi.setNightFactor === 'function') cityApi.setNightFactor(nightFactor);
     return { timeOfDay, nightFactor, daylight, dusk };
   }
 

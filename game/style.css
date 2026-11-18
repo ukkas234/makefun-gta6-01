@@ -1,4 +1,8 @@
-/* Solmara — HUD + screens. System fonts only, no external assets. */
+/* Solmara — HUD + screens. System fonts only, no external assets.
+   HUD node ids match hud.js (createHUD reuses them by id):
+   #hud-minimap, #hud-health(-bar/-fill), #hud-stars, #hud-cash, #hud-clock,
+   #hud-speed, #hud-mission, #hud-objective, #hud-messages, #hud-crosshair,
+   #hud-flash. Screens are shown/hidden by main.js via inline styles. */
 :root {
   --panel: rgba(12, 14, 22, 0.88);
   --panel-border: rgba(255, 255, 255, 0.14);
@@ -72,42 +76,30 @@ html, body {
   gap: 8px;
 }
 
-#minimap {
-  width: 180px;
-  height: 180px;
+#hud-minimap {
+  width: 168px;
+  height: 168px;
   border: 2px solid rgba(255, 255, 255, 0.35);
   border-radius: 50%;
   background: rgba(10, 14, 24, 0.72);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
-.health-bar {
-  position: relative;
-  width: 180px;
-  height: 20px;
+#hud-health { width: 168px; }
+
+#hud-health-bar {
+  height: 14px;
   border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 10px;
+  border-radius: 7px;
   background: rgba(0, 0, 0, 0.55);
   overflow: hidden;
 }
 
-#health-fill {
+#hud-health-fill {
   height: 100%;
   width: 100%;
-  background: linear-gradient(90deg, #2fae4e, var(--green));
-  border-radius: 9px;
+  background: #37d67a;
   transition: width 0.15s linear;
-}
-
-#health-text {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  letter-spacing: 1px;
-  color: #fff;
 }
 
 .hud-top-right {
@@ -120,25 +112,29 @@ html, body {
   gap: 4px;
 }
 
-#stars {
+#hud-stars {
   font-size: 26px;
   letter-spacing: 3px;
   color: var(--gold);
   min-height: 32px;
 }
-#stars .star-off { color: rgba(255, 255, 255, 0.25); }
 
-#money {
+#hud-cash {
   font-size: 24px;
   color: #7ee787;
 }
 
-#clock {
+#hud-clock {
   font-size: 18px;
   color: var(--text);
   background: rgba(0, 0, 0, 0.45);
   padding: 2px 10px;
   border-radius: 6px;
+}
+
+#hud-speed {
+  font-size: 20px;
+  font-weight: 700;
 }
 
 .hud-top-center {
@@ -148,72 +144,65 @@ html, body {
   transform: translateX(-50%);
   max-width: 46vw;
   text-align: center;
+}
+
+#hud-mission {
   font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+#hud-objective {
+  font-size: 15px;
   background: rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.18);
   padding: 8px 16px;
   border-radius: 8px;
+  margin-top: 6px;
 }
-.hud-top-center:empty { display: none; }
+#hud-objective:empty { display: none; }
+#hud-mission:empty { display: none; }
 
-#feed {
+#hud-messages {
   position: absolute;
   left: 14px;
   bottom: 16px;
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   gap: 4px;
   max-width: 420px;
   font-size: 15px;
 }
-#feed > div {
+#hud-messages > div {
   background: rgba(0, 0, 0, 0.55);
   padding: 5px 10px;
   border-radius: 6px;
   border-left: 3px solid var(--accent-2);
 }
-#feed > div.feed-good { border-left-color: var(--green); }
-#feed > div.feed-bad { border-left-color: var(--danger); }
-#feed > div.feed-gold { border-left-color: var(--gold); }
 
-#speed {
-  position: absolute;
-  right: 18px;
-  bottom: 16px;
-  font-size: 44px;
-  line-height: 1;
-  text-align: right;
-}
-#speed .speed-unit {
-  font-size: 15px;
-  margin-left: 6px;
-  color: var(--muted);
-}
-
-#crosshair {
+#hud-crosshair {
   position: absolute;
   left: 50%;
   top: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  display: none;
+}
+
+#hud-flash {
+  position: absolute;
+  left: 50%;
+  top: 38%;
   transform: translate(-50%, -50%);
-  width: 26px;
-  height: 26px;
-}
-#crosshair::before, #crosshair::after {
-  content: "";
-  position: absolute;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 3px #000;
-}
-#crosshair::before { left: 12px; top: 0; width: 2px; height: 26px; }
-#crosshair::after { left: 0; top: 12px; width: 26px; height: 2px; }
-#crosshair .ch-dot {
-  position: absolute;
-  left: 11px;
-  top: 11px;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #fff;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 8px #000;
+  opacity: 0;
+  transition: opacity 0.4s;
+  text-align: center;
+  white-space: nowrap;
 }
 
 /* ---------- Screens ---------- */
@@ -302,41 +291,27 @@ html, body {
 .btn-primary:hover, .btn-primary:focus-visible { filter: brightness(1.15); }
 .btn:disabled { opacity: 0.45; cursor: default; }
 
-.mission-list {
-  margin-top: 16px;
-  text-align: left;
-  border-top: 1px solid var(--panel-border);
-  padding-top: 12px;
-}
-.mission-list .mission-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 7px 4px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  font-size: 14px;
-}
-.mission-list .mission-row .m-reward { color: var(--gold); white-space: nowrap; }
-.mission-list .mission-row.m-done { color: var(--green); }
-.mission-list .mission-row.m-locked { color: var(--muted); }
-
 .controls-panel { margin-top: 16px; text-align: left; }
-.controls-panel h2 { text-align: center; margin: 4px 0 10px; font-size: 20px; }
+.controls-panel summary {
+  text-align: center;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--accent-2);
+  padding: 6px;
+}
 .controls-panel dl {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 6px 16px;
-  margin: 0 0 14px;
+  margin: 10px 0 4px;
   font-size: 14px;
 }
 .controls-panel dt { font-weight: 700; color: var(--accent-2); white-space: nowrap; }
 .controls-panel dd { margin: 0; color: var(--muted); }
-.controls-panel .btn { display: block; margin: 0 auto; }
 
 @media (max-width: 640px) {
-  #minimap { width: 120px; height: 120px; }
-  .health-bar { width: 120px; }
-  #speed { font-size: 32px; }
+  #hud-minimap { width: 120px; height: 120px; }
+  #hud-health { width: 120px; }
   .game-title { font-size: 44px !important; }
   .panel h1 { font-size: 30px; }
   .hud-top-center { font-size: 14px; max-width: 52vw; }

@@ -477,7 +477,7 @@ export function createCity(scene, rngInput) {
     waterTex.offset.x += dt * 0.005;
   }
 
-  return {
+  const api = {
     group,
     colliders,
     roadGraph,
@@ -501,4 +501,8 @@ export function createCity(scene, rngInput) {
     water,
     ground,
   };
+  // Let render.js drive night materials through setTimeOfDay: the scene is the
+  // one object both modules share, so the city registers itself on it.
+  scene.userData.solmaraCity = api;
+  return api;
 }

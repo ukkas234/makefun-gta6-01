@@ -9,27 +9,36 @@
 <body>
 <canvas id="game" aria-label="Solmara: open-world crime sandbox. Explore the city on foot or by car."></canvas>
 
-<!-- In-game HUD. Shown while playing; hidden on the title screen. -->
-<div id="hud" class="hidden" aria-hidden="true">
+<!-- In-game HUD. hud.js (createHUD) reuses these nodes by id and fills them.
+     Starts hidden: hud.update() only runs during play, so without this the
+     HUD would show through the title screen. hud.update() sets
+     #hud.style.display itself ('none' on title, 'block' in play). -->
+<div id="hud" aria-hidden="true" style="display:none">
   <div class="hud-top-left">
-    <canvas id="minimap" width="180" height="180" aria-label="Minimap"></canvas>
-    <div id="health" class="health-bar" role="meter" aria-label="Health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
-      <div id="health-fill"></div>
-      <span id="health-text">100</span>
+    <canvas id="hud-minimap" width="168" height="168" aria-label="Minimap"></canvas>
+    <div id="hud-health">
+      <div id="hud-health-bar"><div id="hud-health-fill"></div></div>
     </div>
   </div>
   <div class="hud-top-right">
-    <div id="stars" aria-label="Wanted level"></div>
-    <div id="money" aria-label="Cash">$150</div>
-    <div id="clock" aria-label="Time">09:00</div>
+    <div id="hud-stars" aria-label="Wanted level"></div>
+    <div id="hud-cash" aria-label="Cash">$0</div>
+    <div id="hud-clock" aria-label="Time">10:00</div>
+    <div id="hud-speed"></div>
   </div>
-  <div id="objective" class="hud-top-center" aria-live="polite"></div>
-  <div id="feed" aria-live="polite"></div>
-  <div id="speed" class="hidden"><span id="speed-value">0</span><span class="speed-unit">km/h</span></div>
-  <div id="crosshair" class="hidden" aria-hidden="true"><span class="ch-dot"></span></div>
+  <div class="hud-top-center">
+    <div id="hud-mission"></div>
+    <div id="hud-objective" aria-live="polite"></div>
+  </div>
+  <div id="hud-messages" aria-live="polite"></div>
+  <div id="hud-crosshair" aria-hidden="true"></div>
+  <div id="hud-flash" aria-hidden="true"></div>
 </div>
 
-<!-- Title screen -->
+<!-- Title screen. main.js reuses this node (ensureScreen) and wires buttons
+     through the delegated [data-action] click handler, so every button needs
+     its data-action. #mission-list lives on the missions screen main.js
+     creates — do NOT add a second one here (duplicate ids break it). -->
 <div id="screen-title" class="screen">
   <div class="panel title-panel">
     <h1 class="game-title">SOLMARA</h1>
@@ -37,15 +46,13 @@
     <p class="game-tagline">Steal cars. Outrun the law. Take the city.</p>
     <p id="title-save-info" class="save-info"></p>
     <div class="menu-buttons">
-      <button id="btn-new" type="button" class="btn btn-primary">New Game</button>
-      <button id="btn-continue" type="button" class="btn">Continue</button>
-      <button id="btn-missions" type="button" class="btn">Missions</button>
-      <button id="btn-controls" type="button" class="btn">Controls</button>
-      <button id="btn-mute" type="button" class="btn" aria-pressed="false">Sound: On</button>
+      <button id="btn-new" data-action="new" type="button" class="btn btn-primary">New Game</button>
+      <button id="btn-continue" data-action="continue" type="button" class="btn">Continue</button>
+      <button id="btn-missions" data-action="missions" type="button" class="btn">Missions</button>
+      <button id="btn-mute" data-action="mute" type="button" class="btn" aria-pressed="false">Sound: <span id="mute-label">On</span></button>
     </div>
-    <div id="mission-list" class="mission-list hidden" aria-label="Missions"></div>
-    <div id="controls-panel" class="controls-panel hidden">
-      <h2>Controls</h2>
+    <details class="controls-panel">
+      <summary>Controls</summary>
       <dl>
         <dt>W A S D / arrows</dt><dd>Move on foot / drive</dd>
         <dt>Mouse drag</dt><dd>Orbit camera</dd>
@@ -59,59 +66,61 @@
         <dt>M</dt><dd>Mute</dd>
         <dt>Esc / P</dt><dd>Pause</dd>
       </dl>
-      <button id="btn-close-controls" type="button" class="btn">Close</button>
-    </div>
+    </details>
     <p class="title-foot">Danny Reyes · Solmara · Original game — no real places, people or brands.</p>
   </div>
 </div>
 
-<!-- Pause screen -->
-<div id="screen-pause" class="screen hidden">
+<!-- Pause screen. Reused by main.js; buttons need data-action. -->
+<div id="screen-pause" class="screen" style="display:none">
   <div class="panel">
     <h1>Paused</h1>
     <p class="panel-sub">Solmara waits for no one. Except now.</p>
     <div class="menu-buttons">
-      <button id="btn-resume" type="button" class="btn btn-primary">Resume</button>
-      <button id="btn-pause-missions" type="button" class="btn">Missions</button>
-      <button id="btn-pause-mute" type="button" class="btn" aria-pressed="false">Sound: On</button>
-      <button id="btn-pause-quit" type="button" class="btn">Quit to Title</button>
+      <button id="btn-resume" data-action="resume" type="button" class="btn btn-primary">Resume</button>
+      <button id="btn-pause-missions" data-action="missions" type="button" class="btn">Missions</button>
+      <button id="btn-pause-restart" data-action="restart" type="button" class="btn">Restart (New Game)</button>
+      <button id="btn-pause-mute" data-action="mute" type="button" class="btn">Mute / Unmute</button>
+      <button id="btn-pause-quit" data-action="quit" type="button" class="btn">Quit to Title</button>
     </div>
-    <div id="pause-mission-list" class="mission-list hidden" aria-label="Missions"></div>
   </div>
 </div>
 
-<!-- Busted / Wasted overlay -->
-<div id="screen-over" class="screen hidden">
+<!-- Busted / Wasted overlay (kept for the design doc's screen list; main.js
+     shows its own screen-busted / screen-wasted screens instead). -->
+<div id="screen-over" class="screen" style="display:none">
   <div class="panel">
     <h1 id="over-title">BUSTED</h1>
     <p id="over-text" class="panel-sub"></p>
     <p id="over-fine" class="fine"></p>
     <div class="menu-buttons">
-      <button id="btn-over-continue" type="button" class="btn btn-primary">Continue</button>
+      <button id="btn-over-continue" data-action="resume" type="button" class="btn btn-primary">Continue</button>
     </div>
   </div>
 </div>
 
-<!-- Mission complete overlay -->
-<div id="screen-mission" class="screen hidden">
+<!-- Mission complete overlay (kept for the design doc's screen list;
+     missions.js announces completion through hud.flash instead). -->
+<div id="screen-mission" class="screen" style="display:none">
   <div class="panel">
     <h1>Mission Complete</h1>
     <p id="mission-complete-title" class="panel-sub"></p>
     <p id="mission-complete-reward" class="fine"></p>
     <div class="menu-buttons">
-      <button id="btn-mission-next" type="button" class="btn btn-primary">Continue</button>
+      <button id="btn-mission-next" data-action="resume" type="button" class="btn btn-primary">Continue</button>
     </div>
   </div>
 </div>
 
-<!-- Story complete screen -->
-<div id="screen-story" class="screen hidden">
+<!-- Story complete screen. Reused by main.js; buttons need data-action. -->
+<div id="screen-story" class="screen" style="display:none">
   <div class="panel">
     <h1>Story Complete</h1>
     <p class="panel-sub">The Big One is done. Solmara is yours, Danny Reyes.</p>
     <p id="story-text" class="fine"></p>
     <div class="menu-buttons">
-      <button id="btn-story-continue" type="button" class="btn btn-primary">Keep Playing — Free Roam</button>
+      <button id="btn-story-continue" data-action="resume" type="button" class="btn btn-primary">Keep Playing — Free Roam</button>
+      <button id="btn-story-quit" data-action="quit" type="button" class="btn">Quit to Title</button>
     </div>
   </div>
 </div>
