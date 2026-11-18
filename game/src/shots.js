@@ -53,7 +53,18 @@ export function stageShot(name, game, seed = 1) {
     else if (typeof g.police.reset === 'function') g.police.reset();
     const cops = g.police.cars || [];
     spots.forEach((s, i) => {
-      const car = cops[i];
+      let car = cops[i];
+      // Shot mode never runs update(), so no police cars exist yet: spawn
+      // one per spot on demand (spawnCar picks a road point near the
+      // player; the staged position below overwrites wherever it lands).
+      if (!car && typeof g.police.spawnCar === 'function') {
+        try {
+          g.police.spawnCar(g.player || { x: 0, z: 0 });
+        } catch {
+          // Spawn failed: keep today's behaviour and skip this spot.
+        }
+        car = (g.police.cars || [])[i];
+      }
       if (!car) return;
       car.x = s[0]; car.z = s[1]; car.heading = s[2] ?? 0; car.speed = s[3] ?? 0;
       // Shot mode never runs the game loop, so sync the mesh here too —

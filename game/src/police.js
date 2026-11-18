@@ -84,6 +84,8 @@ export function createPolice(scene, city) {
     cars: [],   // police car objects (vehicles.js cars + health/takeDamage)
     foot: [],   // on-foot cop entities
     addWanted,
+    setWanted,
+    spawnCar: spawnPoliceCar,
     update,
     reset,
     nearestCopDist,
@@ -214,6 +216,15 @@ export function createPolice(scene, city) {
       hiddenTimer = 0;
       freshHeat = 5; // fresh crime: cops spawn even though none is near yet
     }
+    return api.wanted;
+  }
+
+  // Set the wanted level directly, with no spawn/despawn side effects.
+  // Shot staging relies on this: setWanted(3) after placing police cars
+  // must only set the number, not wipe the staged cars via reset().
+  // (main.js already guards for this method at the wanted-decay site.)
+  function setWanted(n) {
+    api.wanted = Math.max(0, Math.min(MAX_WANTED, n));
     return api.wanted;
   }
 
