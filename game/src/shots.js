@@ -98,14 +98,15 @@ export function stageShot(name, game, seed = 1) {
       break;
     }
     case 'chase': {
-      // Dusk police chase: 3 stars, two police cars closing in behind.
-      setTime(18.5);
-      placePlayerCar('sedan', -52, 0, Math.PI / 2, 22);
+      // Dusk police chase: 3 stars, two police cars closing in head-on
+      // ahead of the player in the oncoming lane (in frame of the chase cam).
+      setTime(16.5);
+      placePlayerCar('muscle', -52, 0, Math.PI / 2, 22);
       placeTraffic([
         [52, 0, Math.PI / 2, 14], [104, 52, 0, 8], [-156, -52, Math.PI / 2, 10],
       ]);
       placePolice([
-        [-104, 0, Math.PI / 2, 20], [-130, 12, Math.PI / 2, 20],
+        [-24, 3, -Math.PI / 2, 18], [-4, -3, -Math.PI / 2, 18],
       ]);
       // Placing police resets wanted first; re-apply 3 stars after.
       setWanted(3);
